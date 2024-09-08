@@ -1,39 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Weather Update - Iligan City</title>
-    <link href="style.css" rel="stylesheet" />
-  </head>
-  <body>
-    <h1>Weather Update - Iligan City</h1>
-    <div id="weather">
-      <p>Loading weather data...</p>
-    </div>
-    <footer>Joshua Camposo</footer>
-    <script>
-      document.addEventListener("DOMContentLoaded", async function () {
-        const apiKey = "74c1565ae1594c3eb1660424242108";
-        const cityName = "Iligan City";
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Weather Update</title>
+  <link href="style.css" rel="stylesheet" />
+</head>
+<body>
+  <h1>Weather Update</h1>
+  <nav>
+    <form id="search-form">
+      <input type="text" id="city-input" placeholder="Enter city name" required />
+    </form>
+  </nav>
+  <div id="weather">
+    <p>Loading weather data...</p>
+  </div>
+  <footer>Joshua Camposo</footer>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const apiKey = "74c1565ae1594c3eb1660424242108";
+      const form = document.getElementById("search-form");
+      const weatherContainer = document.getElementById("weather");
+
+      const fetchWeatherData = async (cityName) => {
         const apiEndpoint = `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${cityName}&days=3`;
 
         try {
           const response = await fetch(apiEndpoint);
+          if (!response.ok) throw new Error('Network response was not ok');
           const weatherData = await response.json();
-          console.log(weatherData);
+          
+          if (weatherData.error) {
+            throw new Error(weatherData.error.message);
+          }
 
-          const weatherContainer = document.getElementById("weather");
           const humidityLevel = weatherData.current.humidity;
-          const currentData = weatherData.current;
           const forecastDays = weatherData.forecast.forecastday;
 
-          weatherContainer.innerHTML = `
-           <h2>${cityName}</h2>
-       `;
+          weatherContainer.innerHTML = `<h2>${cityName}</h2>`;
           forecastDays.forEach((day) => {
             const date = new Date(day.date).toLocaleDateString("en-US", {
               weekday: "long",
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
             });
             const temperatureInCelsius = day.day.avgtemp_c;
             const weatherDescription = day.day.condition.text;
@@ -50,10 +61,21 @@
             weatherContainer.appendChild(dayDiv);
           });
         } catch (error) {
-          const weatherContainer = document.getElementById("weather");
           weatherContainer.innerHTML = `<p>Unable to retrieve weather data: ${error.message}</p>`;
         }
+      };
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const cityName = document.getElementById("city-input").value.trim();
+        if (cityName) {
+          fetchWeatherData(cityName);
+        }
       });
-    </script>
-  </body>
+
+      // Fetch default weather data for a starting city
+      fetchWeatherData("Iligan City");
+    });
+  </script>
+</body>
 </html>
